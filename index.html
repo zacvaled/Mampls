@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Мам, пожалуйста 🥺</title>
+    <!-- Подключаем конфетти -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.6);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 22px;
+            color: #d81b60;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            z-index: 2;
+        }
+
+        /* Контейнер, внутри которого будут происходить все догонялки */
+        .buttons-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s, left 0.3s ease, top 0.3s ease;
+            outline: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            white-space: nowrap;
+        }
+
+        .btn-yes {
+            background-color: #ff69b4;
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+            z-index: 10;
+        }
+
+        .btn-yes:hover {
+            background-color: #ff1493;
+        }
+
+        .btn-no {
+            background-color: #fce4ec;
+            color: #c2185b;
+            z-index: 20;
+        }
+
+        /* Экран победы */
+        .victory-screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            margin: auto;
+            z-index: 30;
+        }
+
+        .victory-screen h1 {
+            font-size: 28px;
+            color: #e91e63;
+            margin-bottom: 10px;
+        }
+
+        .heart {
+            font-size: 55px;
+            animation: pulse 1.2s infinite;
+            display: inline-block;
+            margin-top: 15px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <!-- Главный экран -->
+        <div id="requestGroup" style="display: flex; flex-direction: column; height: 100%; flex-grow: 1; width: 100%;">
+            <h1>мам можешь 305 рублей на летай скинуть пожалуйста 🥺</h1>
+            <div class="buttons-container" id="btnContainer">
+                <button class="btn btn-yes" id="yesBtn">Ладно</button>
+                <button class="btn btn-no" id="noBtn">Нет</button>
+            </div>
+        </div>
+
+        <!-- Экран успеха -->
+        <div id="victoryGroup" class="victory-screen">
+            <h1>Урааа! Спасибо, мам! ❤️</h1>
+            <p style="color: #888; font-size: 18px;">Лучшая мама на свете ✨</p>
+            <div class="heart">💖</div>
+        </div>
+    </div>
+
+    <script>
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const container = document.getElementById('btnContainer');
+        const requestGroup = document.getElementById('requestGroup');
+        const victoryGroup = document.getElementById('victoryGroup');
+
+        const noTexts = [
+            "почему???",
+            "ну мааам 🥺",
+            "всего 305 рублей...",
+            "летай очень нужен!",
+            "ладно, сдаюсь! 😂"
+        ];
+
+        let textIndex = 0;
+        let yesScale = 1;
+        let noScale = 1;
+        let clickCount = 0;
+
+        noBtn.addEventListener('click', () => {
+            clickCount++;
+
+            // Меняем текст реплики
+            noBtn.textContent = noTexts[textIndex];
+            if (textIndex < noTexts.length - 1) {
+                textIndex++;
+            }
+
+            // Переводим "Нет" в абсолютные координаты относительно КОНТЕЙНЕРА
+            if (noBtn.style.position !== 'absolute') {
+                noBtn.style.position = 'absolute';
+                noBtn.style.margin = '0';
+            }
+
+            // На 5-й клик включается полная блокировка
+            if (clickCount >= 5) {
+                yesScale = 3.8; // "Ладно" раздувается на весь контейнер
+                noScale = 0.5;
+
+                // Меняем слои: "Ладно" теперь над кнопкой "Нет"
+                yesBtn.style.zindex = '25';
+                yesBtn.style.position = 'relative';
+                noBtn.style.zIndex = '5';
+
+                // Прячем "Нет" ровно по центру под кнопку "Ладно"
+                noBtn.style.left = '50%';
+                noBtn.style.top = '50%';
+                noBtn.style.transform = 'translate(-50%, -50%) scale(' + noScale + ')';
+            } else {
+                // Обычные догонялки (клики 1-4) строго внутри контейнера кнопок
+                yesScale += 0.25;
+                noScale = Math.max(0.6, noScale - 0.08);
+
+                // Вычисляем размеры контейнера за вычетом размеров самой кнопки
+                const maxX = container.clientWidth - noBtn.offsetWidth;
+                const maxY = container.clientHeight - noBtn.offsetHeight;
+
+                // Генерируем случайную позицию, которая физически не может выйти за рамки
+                const randomX = Math.random() * maxX;
+                const randomY = Math.random() * maxY;
+
+                noBtn.style.left = `${randomX}px`;
+                noBtn.style.top = `${randomY}px`;
+                noBtn.style.transform = `scale(${noScale})`;
+            }
+
+            yesBtn.style.transform = `scale(${yesScale})`;
+        });
+
+        yesBtn.addEventListener('click', () => {
+            requestGroup.style.display = 'none';
+            victoryGroup.style.display = 'block';
+            setTimeout(() => {
+                victoryGroup.style.opacity = '1';
+            }, 50);
+
+            // Салют
+            var duration = 4 * 1000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 4,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0, y: 0.7 },
+                    colors: ['#ff69b4', '#ffb6c1', '#ffffff', '#ff1493']
+                });
+                confetti({
+                    particleCount: 4,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1, y: 0.7 },
+                    colors: ['#ff69b4', '#ffb6c1', '#ffffff', '#ff1493']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        });
+    </script>
+</body>
+</html>
